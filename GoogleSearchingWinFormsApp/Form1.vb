@@ -1,26 +1,39 @@
 ﻿Imports System.IO
+Imports System.Net.Http
+Imports System.Net.Http.Headers
+Imports Newtonsoft.Json
+Imports Newtonsoft.Json.Linq
+Imports System.Threading
+Imports System.Collections
+Imports System.Text.RegularExpressions
+Imports System.Text
+
 Public Class Form1
 
-    Dim filePath As String = "keyword.txt"
+
+    Public currentDirectory As String = My.Application.Info.DirectoryPath
+    Public searchingResultDir As String = currentDirectory + "\SearchingResult"
+
+    Dim keywordFilePath As String = "keyword.txt"
 
 
     Private Sub Open_Note_Btn_Click(sender As Object, e As EventArgs) Handles Open_Note_Btn.Click
 
-        If File.Exists(filePath) Then
-            Dim fileContent As String = File.ReadAllText(filePath)
+        If File.Exists(keywordFilePath) Then
+            Dim fileContent As String = File.ReadAllText(keywordFilePath)
         Else
-            Dim fs As FileStream = File.Create(filePath)
+            Dim fs As FileStream = File.Create(keywordFilePath)
             fs.Close()
         End If
 
-        Process.Start("explorer.exe", filePath)
+        Process.Start("explorer.exe", keywordFilePath)
 
     End Sub
 
     Private Sub Read_LineText_By_LineNumber_Btn_Click(sender As Object, e As EventArgs) Handles Read_LineText_By_LineNumber_Btn.Click
+        SearchingContent_TextBox.Text = ""
         Dim selected_line_number = Line_Number_NumericUpDown.Value
-
-        Using reader As New StreamReader(filePath)
+        Using reader As New StreamReader(keywordFilePath)
             Dim line_counter = 1
             While Not reader.EndOfStream
                 Dim line As String = reader.ReadLine()
@@ -34,7 +47,7 @@ Public Class Form1
 
     Private Sub Read_LineCount_Button_Click(sender As Object, e As EventArgs) Handles Read_LineCount_Button.Click
         Dim line_counter = 0
-        Using reader As New StreamReader(filePath)
+        Using reader As New StreamReader(keywordFilePath)
 
             While Not reader.EndOfStream
                 Dim line As String = reader.ReadLine()
@@ -45,7 +58,160 @@ Public Class Form1
         Line_Number_Counter_Label.Text = "共" & line_counter & "行"
     End Sub
 
-    Private Sub Start_Searching_Button_Click(sender As Object, e As EventArgs) Handles Start_Searching_Button.Click
-        EventLog_ListBox.Items.Add(Now.ToString("yyyy-MM-dd HH:mm:ss") + " - 開始搜尋")
+    Private Async Sub Start_Searching_Button_Click(sender As Object, e As EventArgs) Handles Start_Searching_Button.Click
+        Start_Searching_Button.Enabled = False
+        Start_Searching_Button.Text = "搜尋中..."
+        EventLog_ListBox.Items.Clear()
+
+        EventLog_ListBox.Items.Add(Now.ToString("yyyy-MM-dd HH:mm:ss") + " - 搜尋開始")
+
+        Dim result_filePath As String = searchingResultDir + "\SearchingResult_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt"
+
+        Dim keyword_list As New List(Of String)
+
+        Using reader As New StreamReader(keywordFilePath)
+            While Not reader.EndOfStream
+                Dim line As String = reader.ReadLine()
+                keyword_list.Add(line)
+            End While
+        End Using
+
+
+        Dim my_counter = 0
+
+        For Each kword In keyword_list
+
+            EventLog_ListBox.Items.Add(Now.ToString("yyyy-MM-dd HH:mm:ss") + " - 搜尋: " + kword + " 中")
+
+            'Debug.WriteLine(kword)
+            For start = 0 To Max_Searching_Page_Limit_NumericUpDown.Value * 10 Step 10
+
+                Dim searching_result_text = Await Submit_Get_Google_Searching_Result_Html(kword, start)
+                Dim mail_list = FindEmails(searching_result_text)
+
+                ' Save to file line by line
+                Using writer As New StreamWriter(result_filePath, True)
+                    For Each email As String In mail_list
+                        Debug.WriteLine(email)
+                        writer.WriteLine(email)
+                    Next
+                    writer.Close()
+                End Using
+
+                Await Delay_msec(Delay_Sec_Between_Searching_NumericUpDown.Value * 1000)
+            Next
+
+            my_counter += 1
+
+            If my_counter < keyword_list.Count Then
+
+                If my_counter Mod 15 = 0 Then
+
+                    For sec = Searching_15Time_Delay_Sec_NumericUpDown.Value To 0 Step -1
+                        Searching_15Time_Delay_Sec_Label.Text = "剩餘 : " & sec & " 秒"
+                        Await Delay_msec(1000)
+                    Next
+
+                Else
+                    For sec = Delay_Sec_Between_Keyword_NumericUpDown.Value To 0 Step -1
+                        Keyword_Delay_Sec_Label.Text = "剩餘 : " & sec & " 秒"
+                        Await Delay_msec(1000)
+                    Next
+                End If
+
+            End If
+        Next
+
+        EventLog_ListBox.Items.Add(Now.ToString("yyyy-MM-dd HH:mm:ss") + " - 搜尋結束")
+        Start_Searching_Button.Enabled = True
+        Start_Searching_Button.Text = "開始搜尋"
+    End Sub
+
+
+
+    Public Async Function Submit_Get_Google_Searching_Result_Html(keyword As String, start As Integer) As Task(Of String)
+
+
+        Dim apiUrl As String = "https://www.google.com/search?q=" + "%40 " + keyword + " EMAIL HK&start=" & start
+
+        Debug.WriteLine(apiUrl)
+
+        Try
+            Using httpClient As New HttpClient()
+
+                'httpClient.DefaultRequestHeaders.Authorization = New AuthenticationHeaderValue("Bearer", bearerToken)
+                'Dim content As New StringContent(jsonRequestData, Encoding.UTF8, "application/json")
+
+                Dim response As HttpResponseMessage = Await httpClient.GetAsync(apiUrl)
+
+                If response.IsSuccessStatusCode Then
+                    Dim responseBody As String = Await response.Content.ReadAsStringAsync()
+                    Debug.WriteLine("############ responseBody: ############### ")
+                    'Debug.WriteLine(responseBody)
+                    'Job_Description_RichTextBox.Text = responseBody
+                    Return responseBody
+                Else
+                    Debug.WriteLine("http status code : " & response.StatusCode)
+                    Return "error"
+                End If
+
+            End Using
+
+            Return "error"
+        Catch ex As Exception
+
+            EventLog_ListBox.Items.Add("查詢發生錯誤")
+
+        End Try
+
+
+        Return "error"
+
+    End Function
+
+
+    Public Shared Function FindEmails(input As String) As List(Of String)
+        Dim emailPattern As String = "\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
+        Dim regex As New Regex(emailPattern)
+        Dim matches As MatchCollection = regex.Matches(input)
+        Dim emails As New List(Of String)
+
+        For Each match As Match In matches
+            emails.Add(match.Value)
+        Next
+
+        Return emails
+    End Function
+
+
+
+    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        'Check if Folder exists
+        If Not Directory.Exists(searchingResultDir) Then
+            Directory.CreateDirectory(searchingResultDir)
+        End If
+
+
+
+        Dim line_counter = 0
+        Using reader As New StreamReader(keywordFilePath)
+
+            While Not reader.EndOfStream
+                Dim line As String = reader.ReadLine()
+                line_counter += 1
+            End While
+        End Using
+
+        Line_Number_Counter_Label.Text = "共" & line_counter & "行"
+
+    End Sub
+
+    Public Shared Async Function Delay_msec(msec As Integer) As Task
+        Await Task.Delay(msec)
+    End Function
+
+    Private Sub Reveal_Searching_Result_Dir_Btn_Click(sender As Object, e As EventArgs) Handles Reveal_Searching_Result_Dir_Btn.Click
+        Process.Start("explorer.exe", searchingResultDir)
     End Sub
 End Class
