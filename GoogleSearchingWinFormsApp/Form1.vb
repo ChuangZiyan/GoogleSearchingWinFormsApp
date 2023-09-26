@@ -13,8 +13,9 @@ Public Class Form1
 
     Public currentDirectory As String = My.Application.Info.DirectoryPath
     Public searchingResultDir As String = currentDirectory + "\SearchingResult"
+    Public keywordFilePath As String = "keyword.txt"
 
-    Dim keywordFilePath As String = "keyword.txt"
+    Public PAUSE_FLAG = False
 
 
     Private Sub Open_Note_Btn_Click(sender As Object, e As EventArgs) Handles Open_Note_Btn.Click
@@ -60,12 +61,15 @@ Public Class Form1
 
     Private Async Sub Start_Searching_Button_Click(sender As Object, e As EventArgs) Handles Start_Searching_Button.Click
         Start_Searching_Button.Enabled = False
-        Start_Searching_Button.Text = "搜尋中..."
-        EventLog_ListBox.Items.Clear()
+        Pause_Button.Enabled = True
+        Pause_Button.Text = "暫停"
 
-        EventLog_ListBox.Items.Add(Now.ToString("yyyy-MM-dd HH:mm:ss") + " - 搜尋開始")
+        Start_Searching_Button.Text = "搜尋中..."
+        Start_Time_TextBox.Text = Now.ToString("G")
+        End_Time_TextBox.Text = ""
 
         Dim result_filePath As String = searchingResultDir + "\SearchingResult_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt"
+        File.Create(result_filePath).Dispose()
 
         Dim keyword_list As New List(Of String)
 
@@ -76,27 +80,41 @@ Public Class Form1
             End While
         End Using
 
-
         Dim my_counter = 0
 
         For Each kword In keyword_list
+            Message_RichTextBox.Clear()
 
-            EventLog_ListBox.Items.Add(Now.ToString("yyyy-MM-dd HH:mm:ss") + " - 搜尋: " + kword + " 中")
+            'EventLog_ListBox.Items.Add(Now.ToString("yyyy-MM-dd HH:mm:ss") + " - 搜尋: " + kword + " 中")
+
+            SearchingContent_TextBox.Text = kword
+            Line_Number_NumericUpDown.Value = my_counter + 1
 
             'Debug.WriteLine(kword)
-            For start = 0 To Max_Searching_Page_Limit_NumericUpDown.Value * 10 Step 10
+            For start = 0 To Max_Searching_Page_Limit_NumericUpDown.Value * 10 - 1 Step 10
+
+                While PAUSE_FLAG
+                    'Debug.WriteLine("PAUSE")
+                    Await Delay_msec(1000)
+                End While
 
                 Dim searching_result_text = Await Submit_Get_Google_Searching_Result_Html(kword, start)
                 Dim mail_list = FindEmails(searching_result_text)
 
-                ' Save to file line by line
-                Using writer As New StreamWriter(result_filePath, True)
-                    For Each email As String In mail_list
-                        Debug.WriteLine(email)
+                For Each email As String In mail_list
+                    Debug.WriteLine(email)
+                    Message_RichTextBox.AppendText(email & vbCrLf)
+                    If CheckEmailExist(result_filePath, email) Then
+                        Continue For
+                    End If
+                    ' Save email to file 
+                    Using writer As New StreamWriter(result_filePath, True)
                         writer.WriteLine(email)
-                    Next
-                    writer.Close()
-                End Using
+                        writer.Close()
+                    End Using
+                Next
+
+
 
                 Await Delay_msec(Delay_Sec_Between_Searching_NumericUpDown.Value * 1000)
             Next
@@ -122,19 +140,24 @@ Public Class Form1
             End If
         Next
 
-        EventLog_ListBox.Items.Add(Now.ToString("yyyy-MM-dd HH:mm:ss") + " - 搜尋結束")
+        'EventLog_ListBox.Items.Add(Now.ToString("yyyy-MM-dd HH:mm:ss") + " - 搜尋結束")
+        End_Time_TextBox.Text = Now.ToString("G")
         Start_Searching_Button.Enabled = True
         Start_Searching_Button.Text = "開始搜尋"
+        Pause_Button.Enabled = False
+        Pause_Button.Text = "暫停"
+        PAUSE_FLAG = False
     End Sub
 
 
 
     Public Async Function Submit_Get_Google_Searching_Result_Html(keyword As String, start As Integer) As Task(Of String)
 
-
         Dim apiUrl As String = "https://www.google.com/search?q=" + "%40 " + keyword + " EMAIL HK&start=" & start
 
         Debug.WriteLine(apiUrl)
+
+        'Return "hello this is test email.test@hello.com feel free to contact us"
 
         Try
             Using httpClient As New HttpClient()
@@ -148,10 +171,10 @@ Public Class Form1
                     Dim responseBody As String = Await response.Content.ReadAsStringAsync()
                     Debug.WriteLine("############ responseBody: ############### ")
                     'Debug.WriteLine(responseBody)
-                    'Job_Description_RichTextBox.Text = responseBody
                     Return responseBody
                 Else
                     Debug.WriteLine("http status code : " & response.StatusCode)
+                    MsgBox("Http Status Code : " & response.StatusCode)
                     Return "error"
                 End If
 
@@ -159,8 +182,8 @@ Public Class Form1
 
             Return "error"
         Catch ex As Exception
-
-            EventLog_ListBox.Items.Add("查詢發生錯誤")
+            Return "exception"
+            'EventLog_ListBox.Items.Add("查詢發生錯誤")
 
         End Try
 
@@ -184,6 +207,23 @@ Public Class Form1
     End Function
 
 
+    Public Function CheckEmailExist(file_path As String, email_str As String) As Boolean
+
+        Using reader As New StreamReader(file_path)
+
+            While Not reader.EndOfStream
+                Dim line As String = reader.ReadLine()
+                If line = email_str Then
+                    Return True
+                End If
+            End While
+        End Using
+
+        Return False
+
+    End Function
+
+
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
@@ -191,8 +231,6 @@ Public Class Form1
         If Not Directory.Exists(searchingResultDir) Then
             Directory.CreateDirectory(searchingResultDir)
         End If
-
-
 
         Dim line_counter = 0
         Using reader As New StreamReader(keywordFilePath)
@@ -213,5 +251,17 @@ Public Class Form1
 
     Private Sub Reveal_Searching_Result_Dir_Btn_Click(sender As Object, e As EventArgs) Handles Reveal_Searching_Result_Dir_Btn.Click
         Process.Start("explorer.exe", searchingResultDir)
+    End Sub
+
+    Private Sub Pause_Button_Click(sender As Object, e As EventArgs) Handles Pause_Button.Click
+
+        If PAUSE_FLAG Then
+            PAUSE_FLAG = False
+            Pause_Button.Text = "暫停"
+        Else
+            PAUSE_FLAG = True
+            Pause_Button.Text = "繼續"
+        End If
+
     End Sub
 End Class
