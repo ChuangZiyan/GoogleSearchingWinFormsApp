@@ -103,10 +103,15 @@ Public Class Form1
 
                 For Each email As String In mail_list
                     Debug.WriteLine(email)
-                    Message_RichTextBox.AppendText(email & vbCrLf)
-                    If CheckEmailExist(result_filePath, email) Then
+
+                    If CheckEmailExistInRichTextBox(email) = False Then
+                        Message_RichTextBox.AppendText(email & vbCrLf)
+                    End If
+
+                    If CheckEmailExistInFile(result_filePath, email) Then
                         Continue For
                     End If
+
                     ' Save email to file 
                     Using writer As New StreamWriter(result_filePath, True)
                         writer.WriteLine(email)
@@ -205,7 +210,7 @@ Public Class Form1
     End Function
 
 
-    Public Function CheckEmailExist(file_path As String, email_str As String) As Boolean
+    Public Function CheckEmailExistInFile(file_path As String, email_str As String) As Boolean
 
         Using reader As New StreamReader(file_path)
 
@@ -221,6 +226,16 @@ Public Class Form1
 
     End Function
 
+    Public Function CheckEmailExistInRichTextBox(email_str)
+        For Each line As String In Message_RichTextBox.Lines
+            If line = email_str Then
+                Return True
+            End If
+        Next
+
+        Return False
+    End Function
+
 
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -228,6 +243,13 @@ Public Class Form1
         'Check if Folder exists
         If Not Directory.Exists(searchingResultDir) Then
             Directory.CreateDirectory(searchingResultDir)
+        End If
+
+        If File.Exists(keywordFilePath) Then
+            Dim fileContent As String = File.ReadAllText(keywordFilePath)
+        Else
+            Dim fs As FileStream = File.Create(keywordFilePath)
+            fs.Close()
         End If
 
         Dim line_counter = 0
