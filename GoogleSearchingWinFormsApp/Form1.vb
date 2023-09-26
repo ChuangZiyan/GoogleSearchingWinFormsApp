@@ -155,7 +155,7 @@ Public Class Form1
 
         Debug.WriteLine(apiUrl)
 
-        Return "hello this is test email.test@hello.com feel free to contact us"
+        'Return "hello this is test email.test@hello.com feel free to contact us"
 
         Try
             Using httpClient As New HttpClient()
