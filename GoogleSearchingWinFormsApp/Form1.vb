@@ -114,8 +114,6 @@ Public Class Form1
                     End Using
                 Next
 
-
-
                 Await Delay_msec(Delay_Sec_Between_Searching_NumericUpDown.Value * 1000)
             Next
 
@@ -123,9 +121,9 @@ Public Class Form1
 
             If my_counter < keyword_list.Count Then
 
-                If my_counter Mod 15 = 0 Then
+                If my_counter Mod Number_Of_Searching_Count_NumericUpDown.Value = 0 Then
 
-                    For sec = Searching_15Time_Delay_Sec_NumericUpDown.Value To 0 Step -1
+                    For sec = Searching_Time_Delay_Sec_NumericUpDown.Value To 0 Step -1
                         Searching_15Time_Delay_Sec_Label.Text = "剩餘 : " & sec & " 秒"
                         Await Delay_msec(1000)
                     Next
@@ -157,7 +155,7 @@ Public Class Form1
 
         Debug.WriteLine(apiUrl)
 
-        'Return "hello this is test email.test@hello.com feel free to contact us"
+        Return "hello this is test email.test@hello.com feel free to contact us"
 
         Try
             Using httpClient As New HttpClient()

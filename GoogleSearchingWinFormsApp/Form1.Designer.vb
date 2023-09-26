@@ -44,7 +44,7 @@ Partial Class Form1
         Me.Label9 = New System.Windows.Forms.Label()
         Me.Reveal_Searching_Result_Dir_Btn = New System.Windows.Forms.Button()
         Me.Label10 = New System.Windows.Forms.Label()
-        Me.Searching_15Time_Delay_Sec_NumericUpDown = New System.Windows.Forms.NumericUpDown()
+        Me.Searching_Time_Delay_Sec_NumericUpDown = New System.Windows.Forms.NumericUpDown()
         Me.Searching_15Time_Delay_Sec_Label = New System.Windows.Forms.Label()
         Me.Message_RichTextBox = New System.Windows.Forms.RichTextBox()
         Me.Label11 = New System.Windows.Forms.Label()
@@ -52,11 +52,14 @@ Partial Class Form1
         Me.Start_Time_TextBox = New System.Windows.Forms.TextBox()
         Me.End_Time_TextBox = New System.Windows.Forms.TextBox()
         Me.Pause_Button = New System.Windows.Forms.Button()
+        Me.Number_Of_Searching_Count_NumericUpDown = New System.Windows.Forms.NumericUpDown()
+        Me.Label13 = New System.Windows.Forms.Label()
         CType(Me.Line_Number_NumericUpDown, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.Delay_Sec_Between_Searching_NumericUpDown, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.Delay_Sec_Between_Keyword_NumericUpDown, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.Max_Searching_Page_Limit_NumericUpDown, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.Searching_15Time_Delay_Sec_NumericUpDown, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.Searching_Time_Delay_Sec_NumericUpDown, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.Number_Of_Searching_Count_NumericUpDown, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'Label1
@@ -246,25 +249,25 @@ Partial Class Form1
         'Label10
         '
         Me.Label10.AutoSize = True
-        Me.Label10.Location = New System.Drawing.Point(23, 106)
+        Me.Label10.Location = New System.Drawing.Point(203, 100)
         Me.Label10.Name = "Label10"
-        Me.Label10.Size = New System.Drawing.Size(98, 19)
+        Me.Label10.Size = New System.Drawing.Size(39, 19)
         Me.Label10.TabIndex = 22
-        Me.Label10.Text = "每15筆延遲 : "
+        Me.Label10.Text = "延遲"
         '
-        'Searching_15Time_Delay_Sec_NumericUpDown
+        'Searching_Time_Delay_Sec_NumericUpDown
         '
-        Me.Searching_15Time_Delay_Sec_NumericUpDown.Location = New System.Drawing.Point(127, 98)
-        Me.Searching_15Time_Delay_Sec_NumericUpDown.Maximum = New Decimal(New Integer() {10000, 0, 0, 0})
-        Me.Searching_15Time_Delay_Sec_NumericUpDown.Name = "Searching_15Time_Delay_Sec_NumericUpDown"
-        Me.Searching_15Time_Delay_Sec_NumericUpDown.Size = New System.Drawing.Size(70, 27)
-        Me.Searching_15Time_Delay_Sec_NumericUpDown.TabIndex = 23
-        Me.Searching_15Time_Delay_Sec_NumericUpDown.Value = New Decimal(New Integer() {1800, 0, 0, 0})
+        Me.Searching_Time_Delay_Sec_NumericUpDown.Location = New System.Drawing.Point(248, 98)
+        Me.Searching_Time_Delay_Sec_NumericUpDown.Maximum = New Decimal(New Integer() {10000, 0, 0, 0})
+        Me.Searching_Time_Delay_Sec_NumericUpDown.Name = "Searching_Time_Delay_Sec_NumericUpDown"
+        Me.Searching_Time_Delay_Sec_NumericUpDown.Size = New System.Drawing.Size(70, 27)
+        Me.Searching_Time_Delay_Sec_NumericUpDown.TabIndex = 23
+        Me.Searching_Time_Delay_Sec_NumericUpDown.Value = New Decimal(New Integer() {1800, 0, 0, 0})
         '
         'Searching_15Time_Delay_Sec_Label
         '
         Me.Searching_15Time_Delay_Sec_Label.AutoSize = True
-        Me.Searching_15Time_Delay_Sec_Label.Location = New System.Drawing.Point(203, 106)
+        Me.Searching_15Time_Delay_Sec_Label.Location = New System.Drawing.Point(324, 100)
         Me.Searching_15Time_Delay_Sec_Label.Name = "Searching_15Time_Delay_Sec_Label"
         Me.Searching_15Time_Delay_Sec_Label.Size = New System.Drawing.Size(78, 19)
         Me.Searching_15Time_Delay_Sec_Label.TabIndex = 24
@@ -320,11 +323,31 @@ Partial Class Form1
         Me.Pause_Button.Text = "暫停"
         Me.Pause_Button.UseVisualStyleBackColor = True
         '
+        'Number_Of_Searching_Count_NumericUpDown
+        '
+        Me.Number_Of_Searching_Count_NumericUpDown.Location = New System.Drawing.Point(128, 98)
+        Me.Number_Of_Searching_Count_NumericUpDown.Maximum = New Decimal(New Integer() {1000, 0, 0, 0})
+        Me.Number_Of_Searching_Count_NumericUpDown.Name = "Number_Of_Searching_Count_NumericUpDown"
+        Me.Number_Of_Searching_Count_NumericUpDown.Size = New System.Drawing.Size(70, 27)
+        Me.Number_Of_Searching_Count_NumericUpDown.TabIndex = 31
+        Me.Number_Of_Searching_Count_NumericUpDown.Value = New Decimal(New Integer() {15, 0, 0, 0})
+        '
+        'Label13
+        '
+        Me.Label13.AutoSize = True
+        Me.Label13.Location = New System.Drawing.Point(98, 100)
+        Me.Label13.Name = "Label13"
+        Me.Label13.Size = New System.Drawing.Size(24, 19)
+        Me.Label13.TabIndex = 32
+        Me.Label13.Text = "每"
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 19.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(652, 475)
+        Me.Controls.Add(Me.Label13)
+        Me.Controls.Add(Me.Number_Of_Searching_Count_NumericUpDown)
         Me.Controls.Add(Me.Pause_Button)
         Me.Controls.Add(Me.End_Time_TextBox)
         Me.Controls.Add(Me.Start_Time_TextBox)
@@ -332,7 +355,7 @@ Partial Class Form1
         Me.Controls.Add(Me.Label11)
         Me.Controls.Add(Me.Message_RichTextBox)
         Me.Controls.Add(Me.Searching_15Time_Delay_Sec_Label)
-        Me.Controls.Add(Me.Searching_15Time_Delay_Sec_NumericUpDown)
+        Me.Controls.Add(Me.Searching_Time_Delay_Sec_NumericUpDown)
         Me.Controls.Add(Me.Label10)
         Me.Controls.Add(Me.Reveal_Searching_Result_Dir_Btn)
         Me.Controls.Add(Me.Label9)
@@ -361,7 +384,8 @@ Partial Class Form1
         CType(Me.Delay_Sec_Between_Searching_NumericUpDown, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.Delay_Sec_Between_Keyword_NumericUpDown, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.Max_Searching_Page_Limit_NumericUpDown, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.Searching_15Time_Delay_Sec_NumericUpDown, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.Searching_Time_Delay_Sec_NumericUpDown, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.Number_Of_Searching_Count_NumericUpDown, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -389,7 +413,7 @@ Partial Class Form1
     Friend WithEvents Label9 As Label
     Friend WithEvents Reveal_Searching_Result_Dir_Btn As Button
     Friend WithEvents Label10 As Label
-    Friend WithEvents Searching_15Time_Delay_Sec_NumericUpDown As NumericUpDown
+    Friend WithEvents Searching_Time_Delay_Sec_NumericUpDown As NumericUpDown
     Friend WithEvents Searching_15Time_Delay_Sec_Label As Label
     Friend WithEvents Message_RichTextBox As RichTextBox
     Friend WithEvents Label11 As Label
@@ -397,4 +421,6 @@ Partial Class Form1
     Friend WithEvents Start_Time_TextBox As TextBox
     Friend WithEvents End_Time_TextBox As TextBox
     Friend WithEvents Pause_Button As Button
+    Friend WithEvents Number_Of_Searching_Count_NumericUpDown As NumericUpDown
+    Friend WithEvents Label13 As Label
 End Class
