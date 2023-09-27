@@ -99,6 +99,15 @@ Public Class Form1
                 End While
 
                 Dim searching_result_text = Await Submit_Get_Google_Searching_Result_Html(kword, start)
+                'Dim searching_result_text = "429" ' for test
+                If searching_result_text = "429" Then
+                    For sec = Http_429_Delay_Sec_NumericUpDown.Value To 0 Step -1
+                        Http_429_Delay_Sec_Label.Text = "剩餘 : " & sec & " 秒"
+                        Await Delay_msec(1000)
+                    Next
+                    searching_result_text = Await Submit_Get_Google_Searching_Result_Html(kword, start)
+                End If
+
                 Dim mail_list = FindEmails(searching_result_text)
 
                 For Each email As String In mail_list
@@ -177,8 +186,8 @@ Public Class Form1
                     Return responseBody
                 Else
                     Debug.WriteLine("http status code : " & response.StatusCode)
-                    MsgBox("Http Status Code : " & response.StatusCode)
-                    Return "error"
+                    'MsgBox("Http Status Code : " & response.StatusCode)
+                    Return "429"
                 End If
 
             End Using
